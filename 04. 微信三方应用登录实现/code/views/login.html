@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>登录界面</title>
+    <link rel="stylesheet" href="/css/user.css" />
+  </head>
+
+  <body>
+    <div class="form-container">
+      <h1 class="title">用户登录</h1>
+      <form id="formContainer" class="form-wrapper">
+        <div class="form-item">
+          <input
+            id="userName"
+            class="text"
+            type="text"
+            placeholder="请输入登录账号"
+          />
+        </div>
+        <div class="form-item password-container">
+          <input
+            id="userPassword"
+            type="password"
+            placeholder="请输入登录密码"
+          />
+        </div>
+        <input type="submit" class="signin" value="登录" />
+      </form>
+      <a href="/loginByGithub" class="other-login-methods"
+        >使用github账户进行登录</a
+      >
+      <a href="/loginByWX" class="other-login-methods"
+        >使用微信账户进行登录(使用一号店的appid 只能获取到二维码
+        后续的流程没办法走下去 因为没有srcret 但是后续流程与github一致)</a
+      >
+      <span id="wxLogin" style="color: #fff">使用微信登录 (使用码上登录)</span>
+      <div class="copy-rights">
+        <p>
+          Copyright © 2015.Company name All rights reserved.<a
+            class="switch-register"
+            href="/register.html"
+            >还没有有账号，立即注册</a
+          >
+        </p>
+      </div>
+    </div>
+    <div id="login_container"></div>
+    <!-- 使用微信官方内嵌的方式 -->
+    <!-- <script src="http://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js"></script>
+    <script>
+      var obj = new WxLogin({
+        self_redirect: true,
+        id: 'login_container',
+        appid: 'wxbdc5610cc59c1631',
+        scope: 'snsapi_login',
+        redirect_uri: 'https%3A%2F%2Fpassport.yhd.com%2Fwechat%2Fcallback.do',
+        state: '3d6be0a4035d839573b04816624a415e',
+        style: 'black',
+        href: 'http://localhost:3000/css/qr.css',
+      });
+    </script> -->
+
+    <!-- 使用码上登录 -->
+    <div class="masker-container">
+      <div id="qrcode"></div>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.js"></script>
+    <script>
+      const wxLoginBtn = document.getElementById('wxLogin');
+      const wxLoginMask = document.querySelector('.masker-container');
+      wxLoginBtn.addEventListener('click', async (e) => {
+        let result = await fetch('/loginByWXMSDL');
+        result = await result.json();
+        console.log(result);
+        if (result.code == 0) {
+          makeQrCode(result.data.qrCodeReturnUrl);
+          wxLoginMask.style.display = 'flex';
+          checkUserInfo();
+        }
+      });
+
+      function makeQrCode(text) {
+        new QRCode('qrcode', {
+          text,
+          width: 128,
+          height: 128,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      }
+      /* 轮询获取用户信息 */
+      const checkUserInfo = () => {
+        const timer = setInterval(async () => {
+          const res = await fetch('/getWXMSDLUserInfo');
+          const result = await res.json();
+          if (result.code == 0) {
+            window.location.href = '/';
+            clearInterval(timer);
+          }
+        }, 2000);
+      };
+    </script>
+  </body>
+</html>
